@@ -1,0 +1,40 @@
+namespace: lab6-dev
+
+backend:
+  image: toombayoomba/todo-backend:latest
+  replicas: 2
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+frontend:
+  image: toombayoomba/todo-frontend:latest
+  replicas: 2
+  nodePort: 30080
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+database:
+  host: "postgres-0.postgres.lab6-dev.svc.cluster.local"
+  port: "5432"
+  name: "appdb"
+  user: "postgres"
+  password: "secret"
+
+redis:
+  host: "redis.lab6-dev.svc.cluster.local"
+  port: "6379"
+
+hpa:
+  minReplicas: 2
+  maxReplicas: 5
+  cpuUtilization: 60

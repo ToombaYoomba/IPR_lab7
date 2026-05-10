@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+
+  frontend:
+    build:
+      context: ./frontend
+      target: deps
+    command: npm start
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3001:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:3000/api
+
+  adminer:
+    image: adminer
+    container_name: fullstack-adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+    depends_on:
+      - db

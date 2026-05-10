@@ -1,0 +1,10 @@
+namespace: lab6-dev
+
+postgres:
+  storage: 1Gi
+  password: secret-dev
+  user: postgres
+  db: appdb
+
+redis:
+  image: redis:7-alpine

@@ -1,0 +1,120 @@
+stages:
+  - test
+  - build
+  - publish
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  BACKEND_IMAGE: $DOCKERHUB_USERNAME/todo-backend:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+  FRONTEND_IMAGE: $DOCKERHUB_USERNAME/todo-frontend:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+  NODE_VERSION: "20"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - backend/node_modules/
+    - frontend/node_modules/
+    - .npm/
+  policy: pull-push
+
+test-backend:
+  stage: test
+  image: node:$NODE_VERSION-alpine
+  before_script:
+    - cd backend
+    - npm install
+  script:
+    - echo "Running backend tests..."
+    - npm test
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    reports:
+      junit: backend/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage/cobertura-coverage.xml
+    paths:
+      - backend/coverage/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_REF_NAME == "main"
+    - if: $CI_COMMIT_TAG
+
+test-frontend:
+  stage: test
+  image: node:$NODE_VERSION-alpine
+  before_script:
+    - cd frontend
+    - npm install
+  script:
+    - echo "Running frontend tests..."
+    - npm run test:ci
+  artifacts:
+    when: always
+    reports:
+      junit: frontend/junit.xml
+    paths:
+      - frontend/coverage/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_REF_NAME == "main"
+    - if: $CI_COMMIT_TAG
+
+build-backend:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - name: docker:dind
+      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+  needs: ["test-backend"]
+  script:
+    - docker build -t $BACKEND_IMAGE ./backend
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+
+build-frontend:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - name: docker:dind
+      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+  needs: ["test-frontend"]
+  script:
+    - docker build -t $FRONTEND_IMAGE ./frontend
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+
+publish-backend:
+  stage: publish
+  image: docker:24.0.5
+  services:
+    - name: docker:dind
+      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+  needs: ["build-backend"]
+  script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u $DOCKERHUB_USERNAME --password-stdin
+    - docker push $BACKEND_IMAGE
+    - docker tag $BACKEND_IMAGE $DOCKERHUB_USERNAME/todo-backend:latest
+    - docker push $DOCKERHUB_USERNAME/todo-backend:latest
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+
+publish-frontend:
+  stage: publish
+  image: docker:24.0.5
+  services:
+    - name: docker:dind
+      command: ["--tls=false", "--host=tcp://0.0.0.0:2375"]
+  needs: ["build-frontend"]
+  script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u $DOCKERHUB_USERNAME --password-stdin
+    - docker push $FRONTEND_IMAGE
+    - docker tag $FRONTEND_IMAGE $DOCKERHUB_USERNAME/todo-frontend:latest
+    - docker push $DOCKERHUB_USERNAME/todo-frontend:latest
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"

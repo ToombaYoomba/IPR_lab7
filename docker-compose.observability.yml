@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  backend:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      OTEL_SERVICE_NAME: todo-backend
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: lab7-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus-compose.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: lab7-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - backend
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: lab7-tempo
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./observability/tempo/tempo.yml:/etc/tempo.yml:ro
+    command: ["-config.file=/etc/tempo.yml"]
+    networks:
+      - backend

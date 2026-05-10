@@ -1,0 +1,6 @@
+apiVersion: v2
+name: todo-app
+description: Frontend + Backend Helm chart. БД и Redis — в инфраструктурном репозитории.
+type: application
+version: 1.0.0
+appVersion: "latest"

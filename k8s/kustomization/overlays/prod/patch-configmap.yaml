@@ -1,0 +1,6 @@
+- op: replace
+  path: /data/DB_HOST
+  value: "postgres-0.postgres.lab6-dev.svc.cluster.local"
+- op: replace
+  path: /data/REDIS_HOST
+  value: "redis.lab6-dev.svc.cluster.local"

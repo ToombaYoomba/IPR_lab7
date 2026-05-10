@@ -1,0 +1,11 @@
+namespace: lab6-dev
+
+backend:
+  replicas: 2
+
+database:
+  host: "postgres-0.postgres.lab6-dev.svc.cluster.local"
+  password: "secret-dev"
+
+redis:
+  host: "redis.lab6-dev.svc.cluster.local"

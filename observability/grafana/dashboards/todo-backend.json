@@ -1,0 +1,62 @@
+{
+  "uid": "todo-backend-lab7",
+  "title": "Todo Backend — Lab7",
+  "tags": ["lab7"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Requests per second",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "datasource": {"uid": "prometheus"},
+          "expr": "sum(rate(http_requests_total[1m])) by (route, method, status_code)",
+          "legendFormat": "{{method}} {{route}} {{status_code}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "HTTP Request Duration p99 (s)",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "datasource": {"uid": "prometheus"},
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route))",
+          "legendFormat": "p99 {{route}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Active Tasks in DB",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 8, "w": 8, "h": 4},
+      "targets": [
+        {
+          "datasource": {"uid": "prometheus"},
+          "expr": "tasks_total",
+          "legendFormat": "Tasks"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Error Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 8, "w": 16, "h": 4},
+      "targets": [
+        {
+          "datasource": {"uid": "prometheus"},
+          "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[1m]))",
+          "legendFormat": "5xx errors/s"
+        }
+      ]
+    }
+  ]
+}

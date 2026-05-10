@@ -1,0 +1,10 @@
+namespace: lab6-prod
+
+postgres:
+  storage: 5Gi
+  password: REPLACE_WITH_PROD_SECRET
+  user: postgres
+  db: appdb
+
+redis:
+  image: redis:7-alpine
